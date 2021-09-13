@@ -1,48 +1,54 @@
 ---
-title: "Faktoranalyse O*net"
+title: "Faktoranalyse O*Net"
 output: html_notebook
 ---
- 
 
-## Exploratory Factor analysis of the O*NET data 
+## Exploratory Factor analysis of the O\*NET data
+
 Using the R package Psych
 
-
-```{r}
-
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(psych)
 #install.packages("psych")
 
 
+```
 
-data <- as_tibble(read.delim("C:\\Users\\torm\\OneDrive - Kompetanse Norge\\Dokumenter\\GitHub\\Onet\\Faktoranalyse-O-net\\onet_rdatasett.tsv", encoding = "UTF-8"))
+```{r}
+data <- as_tibble(read.delim("onet_rdatasett.tsv", encoding = "UTF-8"))
 
-meta <- c("nr", "utdanningno_yrke", "BesÃ.kstall.pr.Ã.r.utdanning.no", "andel_menn", "andel_menn_0_40", "antall", "interesse")    
+meta <- c("nr", "utdanningno_yrke", "Besøkstall.pr.år.utdanning.no", "andel_menn", "andel_menn_0_40", "antall", "interesse")    
 da <- data[,!names(data) %in% meta] #removing meta data
 
 #Combined analysis
 all <- da
 names(all) <- str_split(names(all),"\\.\\.\\.", simplify = T)[,2] #simplify colnames
 #names(all) <- seq_along(lengths(names(all)))
+
+# View(all)
+
 ```
 
 Start looking at data. Using all 161 variables and 301 observations (job descriptions)
 
-Descriptive analysis and graphical test for normality (requirement for factor analysis). 
+Descriptive analysis and graphical test for normality (requirement for factor analysis).
 
 ```{r }
 (dec <- describe(all)) # test normality assumptions. We want skew and kurtosis = 0. 
 mardia(all) #mardia is a test for normality
 ```
+
 ```{r}
 mardia(all, plot = T) #mardia is a test for normality
 
 ```
 
-Some issues with non-normality but does not look too bad graphically 
+Some issues with non-normality but does not look too bad graphically
 
 Generating the correlation matrix and a scree plot + parallel analysis for deciding the number of factors
+
 ```{r}
 S <- cor(all, method = "pearson")
 
@@ -52,10 +58,11 @@ fa.parallel(x= S, n.obs = 301)
 ```
 
 ## How many factors?
+
 Parallel analysiys and Kaiser-Guttman rule suggest around 10 factors. Looking for the elbow gives 4 factors
 
-
 ### Running a 10 factor model
+
 ```{r}
 #(efamodel1 <- fa(r=S, nfactors = 10,  fm= "minres", n.obs = 301, max.iter = 2000)) #No convergence
 (efamodel1.2 <- fa(r=S, nfactors = 10,  fm= "ml", n.obs = 301)) #Changing to ML estimator
@@ -88,9 +95,10 @@ return(endelig)
 
        
 ```
+
 Bruk funksjonen Ind_per_factor() til å studere indikatorer og ladninger per faktor (evt se på objektet efa10 over)
 
-Min tolkning av 10 faktor:   
+Min tolkning av 10 faktor:\
 ML2: Jobbe med mennesker vs med ting(produkter,tall etc)\
 ML1: Fysisk styrke\
 ML4: Syn/lyd/orientering i rom\
@@ -101,11 +109,11 @@ ML7: Realfag vs humanfag\
 ML6=ML5: ???? (ingen tolkning)\
 ML10: Administrere og kundekontakt?\
 
-Totaltvurdering: Modell gir OK fit, men konvergeringsproblemer med fortrukket estimator. Høy item complexity. Best fit av modellene: Tucker Lewis Index of factoring reliability =  0.741, RMSEA index =  0.064
+Totaltvurdering: Modell gir OK fit, men konvergeringsproblemer med fortrukket estimator. Høy item complexity. Best fit av modellene: Tucker Lewis Index of factoring reliability = 0.741, RMSEA index = 0.064
 
-Hver av faktorene forklarer mellom 6 og 13% av variasjonen. Flere av faktorene er vanskelig å tolke. Prøver modell med færre faktorer  
+Hver av faktorene forklarer mellom 6 og 13% av variasjonen. Flere av faktorene er vanskelig å tolke. Prøver modell med færre faktorer
 
-----
+------------------------------------------------------------------------
 
 7 faktormodell
 
@@ -115,7 +123,8 @@ Hver av faktorene forklarer mellom 6 og 13% av variasjonen. Flere av faktorene e
 
 (efa7 <-Ind_per_factor(efamodel2.1, 10, 5))
 ```
-Tolkning 7 faktorer  
+
+Tolkning 7 faktorer\
 ML2: Grad av behov for kognitive ferdigheter (Substative complexity)\
 ML3: Kroppskontroll (bruk av kropp til å løse oppgaver)\
 ML1: Fysiske ferdigheter\
@@ -123,8 +132,7 @@ ML4: Syn/lyd/orientering i rom\
 ML3: Praktisk vs teoretisk\
 ML6: Jobbe med mennesker vs med ting(produkter,tall etc)\
 ML7: Realfag vs abstakte fag?\
-ML5: Kreativitet/abstrakt tenking vs strukturert? (forklarer minst variasjon  8% og mest uklar)\
-
+ML5: Kreativitet/abstrakt tenking vs strukturert? (forklarer minst variasjon 8% og mest uklar)\
 
 Tolkning av alle faktorer. Forsøk med 6 faktorer
 
@@ -134,8 +142,7 @@ Tolkning av alle faktorer. Forsøk med 6 faktorer
 (efa6 <- Ind_per_factor(efamodel3, 10, 5))
 ```
 
-
-Tolkning 6 faktorer  
+Tolkning 6 faktorer\
 ML2: Grad av behov for kognitive ferdigheter (Substative complexity)\
 ML3: Kroppskontroll (bruk av kropp til å løse oppgaver)\
 ML1: Fysiske ferdigheter\
@@ -144,11 +151,9 @@ ML3: Praktisk vs teoretisk\
 ML6: Jobbe med mennesker vs med ting(produkter,tall etc)\
 ML7: Realfag vs abstakte fag?\
 ML5: Kreativitet/abstrakt tenking vs rask spontan eller egenskaper?\
- (forklarer minst variasjon  8% og mest uklar)
- 
- 
-Fortsatt uklarhet i faktorstrukturen her (min tolkning). Mean item complexity =  2.2 Lewis Tucker=0.62.
+(forklarer minst variasjon 8% og mest uklar)
 
+Fortsatt uklarhet i faktorstrukturen her (min tolkning). Mean item complexity = 2.2 Lewis Tucker=0.62.
 
 ## 4 faktorer
 
@@ -156,6 +161,7 @@ Fortsatt uklarhet i faktorstrukturen her (min tolkning). Mean item complexity = 
 (efamodel4 <- fa(r=S, nfactors = 4, fm='minres', n.obs = 301)) #foretrukket modell
 (efa4 <- Ind_per_factor(efamodel4, 10, 5))
 ```
+
 4 faktorer (som anbefalt av å se etter albuen i scree plot)
 
 MR2: Fysiske ferdigheter\
@@ -163,12 +169,11 @@ MR1: Grad av behov for kognitive ferdigheter (Substative complexity)\
 MR4: Menneskelige/sosiale jobbferdigheter (lede, teamarbeid etc)\
 MR3: Jobbe med mennesker vs med ting(produkter,tall etc)\
 
-Mean item complexity =  1.5. Tucker Lewis= 0.73.
+Mean item complexity = 1.5. Tucker Lewis= 0.73.
 
-Min vurdering: Beste modell med få, men beskrivbare faktorar. Mangler å beskrive en del variasjon 39 % (men bare 6% mindre enn 6 faktormodellen) 
+Min vurdering: Beste modell med få, men beskrivbare faktorar. Mangler å beskrive en del variasjon 39 % (men bare 6% mindre enn 6 faktormodellen)
 
-Modellen minner om Hadden(2004) sin faktoranalyse. Alle faktorene 1-4 virke like som i denne artikkelen. Men samtidig ser det noen forskjeller. Feks MR4 (som er kalt Byråkrati i artikkelen) virker mer sosialt rettet her. 
-
+Modellen minner om Hadden(2004) sin faktoranalyse. Alle faktorene 1-4 virke like som i denne artikkelen. Men samtidig ser det noen forskjeller. Feks MR4 (som er kalt Byråkrati i artikkelen) virker mer sosialt rettet her.
 
 ```{r include=F}
 # (efamodel1.1 <- fa(r=S, nfactors = 7, fm= "ml", n.obs = 301))
@@ -183,8 +188,8 @@ Modellen minner om Hadden(2004) sin faktoranalyse. Alle faktorene 1-4 virke like
 
 ```
 
-
 ### Mulig andre spesifiseringer
+
 Splitte datasettet per område. Evt prøve modell som utelater fysiske egenskapene ettersom de driver mye av variasjonen i modellene?
 
 Har kode på å kjøre modell per område, men har ikke undersøkt i detalj
@@ -237,4 +242,3 @@ scree(A)
 fa.diagram(efamodel2, simple = F, cut = -2.5)
 
 ```
-
